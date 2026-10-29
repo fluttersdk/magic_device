@@ -51,6 +51,14 @@ Future<void> _push(String method) async {
       window.transitioning,
     );
 
+/// Drops the reader and the platform override inside a `testWidgets` body,
+/// which checks that every foundation debug variable is unset before
+/// `tearDown` runs.
+void _releaseBeforeInvariants() {
+  WindowFullscreen.resetInstance();
+  debugDefaultTargetPlatformOverride = null;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -173,6 +181,71 @@ void main() {
 
       expect(window.calls.where((String c) => c == 'toggleFullScreen'),
           hasLength(2));
+    });
+
+    testWidgets('an ignored toggle releases the press after pressTimeout',
+        (WidgetTester tester) async {
+      final WindowFullscreen fullscreen = WindowFullscreen.instance;
+      await tester.pump();
+
+      await fullscreen.toggle();
+      await tester.pump(
+        WindowFullscreen.pressTimeout - const Duration(milliseconds: 1),
+      );
+      await fullscreen.toggle();
+      expect(window.calls, ['isFullScreen', 'toggleFullScreen']);
+
+      await tester.pump(const Duration(milliseconds: 1));
+      await fullscreen.toggle();
+      await tester.pump(WindowFullscreen.pressTimeout);
+
+      expect(window.calls, [
+        'isFullScreen',
+        'toggleFullScreen',
+        'isFullScreen',
+        'toggleFullScreen',
+        'isFullScreen',
+      ]);
+      expect(_state(fullscreen), (false, false, false));
+      _releaseBeforeInvariants();
+    });
+
+    testWidgets('a toggle that sent no notification re-reads the window',
+        (WidgetTester tester) async {
+      final WindowFullscreen fullscreen = WindowFullscreen.instance;
+      await tester.pump();
+      int notified = 0;
+      fullscreen.addListener(() => notified++);
+
+      await fullscreen.toggle();
+      window.fullScreen = true;
+      await tester.pump(WindowFullscreen.pressTimeout);
+
+      expect(_state(fullscreen), (true, true, false));
+      expect(notified, 1);
+      _releaseBeforeInvariants();
+    });
+
+    testWidgets('a notification releases the press before the timeout',
+        (WidgetTester tester) async {
+      final WindowFullscreen fullscreen = WindowFullscreen.instance;
+      await tester.pump();
+
+      await fullscreen.toggle();
+      await _push('willEnterFullScreen');
+      await _push('didEnterFullScreen');
+      await fullscreen.toggle();
+      await _push('willExitFullScreen');
+      await _push('didExitFullScreen');
+      await tester.pump(WindowFullscreen.pressTimeout);
+
+      expect(window.calls, [
+        'isFullScreen',
+        'toggleFullScreen',
+        'toggleFullScreen',
+      ]);
+      expect(_state(fullscreen), (false, false, false));
+      _releaseBeforeInvariants();
     });
 
     test('one shared reader', () {

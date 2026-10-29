@@ -97,6 +97,32 @@ void main() {
       expect(power.idle, isFalse);
     });
 
+    test('starting while backgrounded reads idle at once', () {
+      final WidgetsBinding binding = WidgetsBinding.instance;
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      addTearDown(
+        () => binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed),
+      );
+      final DevicePower power = DevicePower(platform: TargetPlatform.android);
+
+      power.start();
+      addTearDown(power.stop);
+
+      expect(power.idle, isTrue);
+    });
+
+    test('starting in front reads not idle', () {
+      WidgetsBinding.instance.handleAppLifecycleStateChanged(
+        AppLifecycleState.resumed,
+      );
+      final DevicePower power = DevicePower(platform: TargetPlatform.iOS);
+
+      power.start();
+      addTearDown(power.stop);
+
+      expect(power.idle, isFalse);
+    });
+
     test('stopping forgets the last answer', () {
       final DevicePower power = DevicePower(platform: TargetPlatform.iOS);
 

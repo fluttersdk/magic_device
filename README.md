@@ -37,7 +37,7 @@ power.stop();
 | Signal | Meaning |
 |--------|---------|
 | `charging` | On mains power. `full`, `charging` and `connectedNotCharging` count; `discharging` and `unknown` do not. A platform with no battery implementation answers false. |
-| `idle` | Away for at least `DevicePower.idleThreshold` (2 minutes). macOS and Windows read the system-wide last-input clock every `pollInterval` (30 seconds); every other platform reports idle whenever the app is not in front. |
+| `idle` | Away for at least `DevicePower.idleThreshold` (2 minutes). macOS and Windows read the system-wide last-input clock every `pollInterval` (30 seconds); every other platform reports idle whenever the app is not in front, read from the current lifecycle state at `start()` and followed from there. |
 
 Nothing is collected until `start()`, and `stop()` forgets both answers.
 
@@ -73,7 +73,7 @@ if (fullscreen.available) {
 
 The state follows the window, not the calls: the green button, Esc and the Window menu notify listeners just as `toggle()` does, and a window that opens already fullscreen is read once on first use.
 
-`toggle()` is ignored while a press or an animation is under way, so a double press cannot undo itself. It throws a `PlatformException` (`no_window`) when the Flutter view is not in a window, and that refusal releases the press. AppKit silently ignores the call for an app that is not frontmost.
+`toggle()` is ignored while a press or an animation is under way, so a double press cannot undo itself. It throws a `PlatformException` (`no_window`) when the Flutter view is not in a window, and that refusal releases the press. AppKit silently ignores the call for an app that is not frontmost; when the window posts nothing within `WindowFullscreen.pressTimeout` (1 second), the press ends and the window's state is read again.
 
 Use the one `instance`: the channel takes one handler. A view adds and removes a listener and never disposes it. A test calls `WindowFullscreen.resetInstance()` in `tearDown`.
 

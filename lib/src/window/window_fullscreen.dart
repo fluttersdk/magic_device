@@ -53,6 +53,15 @@ class WindowFullscreen extends ChangeNotifier {
 
   static WindowFullscreen? _instance;
 
+  /// How long a [toggle] holds the press when the window sends nothing.
+  ///
+  /// AppKit ignores `toggleFullScreen` for an app that is not frontmost and
+  /// posts no notification, so without a bound the press would hold every later
+  /// toggle on the shared reader. A change that does start posts its
+  /// will-notification within a frame or two of the call, well inside a second,
+  /// so a real press is still guarded against a double press for that span.
+  static const Duration pressTimeout = Duration(seconds: 1);
+
   /// The app's one reader of the window, made on first use.
   static WindowFullscreen get instance => _instance ??= WindowFullscreen._();
 
@@ -70,7 +79,8 @@ class WindowFullscreen extends ChangeNotifier {
   /// Set from a will-notification until the window confirms the change.
   bool _transitioning = false;
 
-  /// Set from a [toggle] until the window starts animating or confirms. The
+  /// Set from a [toggle] until the window starts animating or confirms, or
+  /// [pressTimeout] passes without either. The
   /// window animates for a while after the call returns and [active] reads the
   /// old state throughout, so a second press inside that span would undo the
   /// first.
@@ -79,6 +89,9 @@ class WindowFullscreen extends ChangeNotifier {
   /// that is not frontmost and says nothing: a press must not move the layout
   /// on a change that may never start.
   bool _pressed = false;
+
+  /// Ends a press the window never answered, after [pressTimeout].
+  Timer? _pressTimer;
 
   bool _disposed = false;
 
@@ -103,7 +116,9 @@ class WindowFullscreen extends ChangeNotifier {
   /// Throws the [PlatformException] the plugin answers with when it cannot
   /// reach a window. A refused call sends no notification, so the press ends
   /// here: on the one shared reader it would otherwise hold every later toggle
-  /// in the app.
+  /// in the app. An accepted call the window never answers, as when AppKit
+  /// ignores an app that is not frontmost, ends the press after
+  /// [pressTimeout] and re-reads the window.
   Future<void> toggle() async {
     if (!available || _pressed || _transitioning) return;
 
@@ -115,6 +130,21 @@ class WindowFullscreen extends ChangeNotifier {
       _pressed = false;
       rethrow;
     }
+
+    if (_pressed && !_disposed) {
+      _pressTimer = Timer(pressTimeout, _expirePress);
+    }
+  }
+
+  /// Re-reads the window while the press still holds, so a [toggle] in the gap
+  /// cannot start a second change; the settled reading then ends the press.
+  /// A notification that lands first has already ended it, and wins.
+  void _expirePress() {
+    unawaited(
+      _channel.invokeMethod<bool>('isFullScreen').then((bool? value) {
+        if (_pressed) _settle(value ?? false);
+      }),
+    );
   }
 
   Future<void> _onNative(MethodCall call) async {
@@ -147,6 +177,8 @@ class WindowFullscreen extends ChangeNotifier {
     if (_disposed) return;
 
     _pressed = false;
+    _pressTimer?.cancel();
+    _pressTimer = null;
 
     if (active == _active &&
         target == _target &&
@@ -163,6 +195,7 @@ class WindowFullscreen extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _pressTimer?.cancel();
 
     if (available) _channel.setMethodCallHandler(null);
 

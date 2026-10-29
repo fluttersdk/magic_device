@@ -97,7 +97,13 @@ final class DevicePower with WidgetsBindingObserver {
       return;
     }
 
-    WidgetsBinding.instance.addObserver(this);
+    // An observer hears changes only, so an app started in the background
+    // reads its current state once.
+    final WidgetsBinding binding = WidgetsBinding.instance;
+    binding.addObserver(this);
+
+    final AppLifecycleState? state = binding.lifecycleState;
+    if (state != null) didChangeAppLifecycleState(state);
   }
 
   /// Stops collecting and forgets both answers, so a stopped instance claims no
