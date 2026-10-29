@@ -1,0 +1,18 @@
+name: magic_device_example
+description: Drives WindowFullscreen from a button and prints the window's notifications in order.
+publish_to: 'none'
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  magic_device:
+    path: ../
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

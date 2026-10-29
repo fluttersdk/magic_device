@@ -2,3 +2,4 @@
 library;
 
 export 'src/power/device_power.dart';
+export 'src/window/window_fullscreen.dart';

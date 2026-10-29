@@ -36,6 +36,36 @@ A batteryless Android TV reports `unknown`, which would read as not charging for
 
 Every platform read is a constructor parameter: `batteryState`, `idleDuration`, `platform` and `television`.
 
+## WindowFullscreen
+
+Whether the macOS window is fullscreen, and the one call that flips it. The package's macOS plugin registers the `magic_device/window` channel itself, so the host's `MainFlutterWindow.swift` stays Flutter's stock one.
+
+```dart
+import 'package:magic_device/magic_device.dart';
+
+final WindowFullscreen fullscreen = WindowFullscreen.instance;
+fullscreen.addListener(() => setState(() {}));
+
+if (fullscreen.available) {
+  await fullscreen.toggle();
+}
+```
+
+| Reading | Meaning |
+|---------|---------|
+| `available` | True on macOS only. Everywhere else `toggle()` sends nothing, so gate the control on it. |
+| `active` | Fullscreen, as the window last confirmed (AppKit's did-notification). |
+| `target` | Fullscreen or on its way there: moves on the will-notification, so a layout can animate with the window. |
+| `transitioning` | Between the two: the window's size changes on every frame. |
+
+The state follows the window, not the calls: the green button, Esc and the Window menu notify listeners just as `toggle()` does, and a window that opens already fullscreen is read once on first use.
+
+`toggle()` is ignored while a press or an animation is under way, so a double press cannot undo itself. It throws a `PlatformException` (`no_window`) when the Flutter view is not in a window, and that refusal releases the press. AppKit silently ignores the call for an app that is not frontmost.
+
+Use the one `instance`: the channel takes one handler. A view adds and removes a listener and never disposes it. A test calls `WindowFullscreen.resetInstance()` in `tearDown`.
+
+The `example/` app toggles the window from a button and logs each notification in order.
+
 ## Dependencies
 
-`battery_plus` for the battery state (one `Battery()` per process, held by `DevicePower`) and `flutter_inactive_timer` for the desktop idle clock, loaded through a conditional export so `dart:ffi` never reaches the web compiler. The web has no system-wide input clock.
+`battery_plus` for the battery state (one `Battery()` per process, held by `DevicePower`) and `flutter_inactive_timer` for the desktop idle clock, loaded through a conditional export so `dart:ffi` never reaches the web compiler. The web has no system-wide input clock. `WindowFullscreen` uses the Flutter SDK only.
