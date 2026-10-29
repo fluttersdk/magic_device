@@ -1,8 +1,21 @@
 # Magic Device
 
-Device signals for Flutter apps.
+[![pub.dev version](https://img.shields.io/pub/v/magic_device.svg)](https://pub.dev/packages/magic_device)
+[![CI Status](https://img.shields.io/github/actions/workflow/status/fluttersdk/magic_device/ci.yml?branch=main&label=CI)](https://github.com/fluttersdk/magic_device/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![pub points](https://img.shields.io/pub/points/magic_device)](https://pub.dev/packages/magic_device/score)
+
+Device signals for Flutter apps: whether the device is on mains power, whether the viewer is away, and the macOS window fullscreen state.
 
 > **Alpha**: `magic_device` is under active development. APIs may change between minor versions until `1.0.0`.
+
+## Install
+
+```bash
+flutter pub add magic_device
+```
+
+`DevicePower` needs no setup. `WindowFullscreen` registers its own macOS plugin, so a macOS host needs no edit to its Runner either.
 
 ## DevicePower
 
