@@ -1,5 +1,5 @@
 name: magic_device
-description: Device power signals for Flutter, whether the device is on mains power and whether the viewer is away.
+description: Device signals for Flutter, whether the device is on mains power, whether the viewer is away, and the macOS window fullscreen state.
 version: 0.0.1
 homepage: https://magic.fluttersdk.com/device
 repository: https://github.com/fluttersdk/magic_device
@@ -31,3 +31,11 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+
+flutter:
+  plugin:
+    platforms:
+      # WindowFullscreen's native half. Every other platform answers
+      # `available` false from Dart and never opens the channel.
+      macos:
+        pluginClass: MagicDevicePlugin
