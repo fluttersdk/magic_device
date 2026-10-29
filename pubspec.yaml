@@ -1,0 +1,33 @@
+name: magic_device
+description: Device power signals for Flutter, whether the device is on mains power and whether the viewer is away.
+version: 0.0.1
+homepage: https://magic.fluttersdk.com/device
+repository: https://github.com/fluttersdk/magic_device
+issue_tracker: https://github.com/fluttersdk/magic_device/issues
+
+topics:
+  - battery
+  - idle
+  - power
+  - magic
+  - flutter
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+  flutter: ">=3.27.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # One `Battery()` per process lives in DevicePower: a second instance steals
+  # the first one's EventChannel subscription.
+  battery_plus: ^7.1.2
+  # System-wide user idle on macOS and Windows only, through dart:ffi. Mobile
+  # idle falls back to the app lifecycle, which is why it is not the whole
+  # signal. No native build step.
+  flutter_inactive_timer: ^4.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

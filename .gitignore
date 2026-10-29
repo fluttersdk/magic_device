@@ -1,0 +1,51 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code
+.vscode/
+
+# Test coverage
+coverage/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+pubspec.lock
+
+# AI coding tools
+.ac/
+# Local development path wiring (never committed; breaks CI which has no sibling paths)
+pubspec_overrides.yaml
+
+# Worktrees Claude Code creates for parallel sessions and isolated subagents.
+# Only this subdirectory: the rest of `.claude/` is tracked, because the rules
+# under it are part of the repository.
+#
+# They sit inside the working tree rather than beside it. `git clean -xdf` leaves them
+# alone: git's nested-repository guard resolves a gitfile too, so it reports "Skipping
+# repository .claude/worktrees/<slug>" and the contents survive. `git clean -xdff` does
+# not skip them, and wipes a live worktree while `.git/worktrees/<slug>` survives,
+# leaving a registration that `git worktree prune` then has to clear.
+.claude/worktrees/
